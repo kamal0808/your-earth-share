@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Your Share of Earth</title>
+<meta name="description" content="If Earth's land, trees, animals, gold and stars were split equally among all 8 billion of us — guess your share, then see how close you got.">
+<style>
+  :root{
+    --bg1:#060a1a; --bg2:#0d1430; --accent:#ffd166; --accent2:#4cc9f0;
+    --card:#111a3a; --text:#eef2ff; --muted:#9aa5c9; --good:#52e39a; --bad:#ff6b6b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{margin:0; padding:0; height:100%;}
+  body{
+    background: radial-gradient(ellipse at 50% -10%, #1a2560 0%, var(--bg1) 55%, #02040c 100%);
+    color:var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height:100%;
+    overflow-x:hidden;
+    position:relative;
+  }
+  #stars{position:fixed; inset:0; z-index:0; pointer-events:none;}
+  .wrap{
+    position:relative; z-index:1;
+    max-width:480px; margin:0 auto; padding:24px 18px 60px;
+    min-height:100vh;
+    display:flex; flex-direction:column;
+  }
+  .screen{display:none; flex-direction:column; flex:1; animation: fadeIn .4s ease;}
+  .screen.active{display:flex;}
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+  h1{font-size:1.7rem; margin:.2em 0 .1em; line-height:1.2;}
+  .sub{color:var(--muted); font-size:.95rem; margin-bottom:1.4em; line-height:1.45;}
+  .earth-emoji{font-size:4rem; text-align:center; margin:.2em 0 .4em; filter:drop-shadow(0 0 20px rgba(76,201,240,.5));}
+
+  .btn{
+    display:inline-block; width:100%; text-align:center;
+    background:linear-gradient(135deg, var(--accent2), #7b5cff);
+    color:#06102a; font-weight:700; font-size:1.05rem;
+    border:none; border-radius:16px; padding:16px 20px;
+    cursor:pointer; margin-top:auto;
+    box-shadow:0 8px 24px rgba(76,201,240,.25);
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:scale(.97); box-shadow:0 4px 12px rgba(76,201,240,.2);}
+  .btn.secondary{
+    background:transparent; color:var(--text); border:1.5px solid rgba(255,255,255,.25);
+    box-shadow:none; margin-top:12px;
+  }
+  .btn.small{padding:12px 16px; font-size:.95rem;}
+
+  .progress{display:flex; gap:6px; margin-bottom:18px;}
+  .progress i{flex:1; height:4px; border-radius:4px; background:rgba(255,255,255,.12);}
+  .progress i.done{background:var(--accent2);}
+  .progress i.now{background:var(--accent);}
+
+  .q-icon{font-size:3.2rem; text-align:center; margin:4px 0 2px;}
+  .q-title{font-size:1.25rem; font-weight:700; text-align:center; margin-bottom:.3em;}
+  .q-fact{color:var(--muted); font-size:.88rem; text-align:center; margin-bottom:1.6em; line-height:1.4;}
+
+  .guess-value{
+    text-align:center; font-size:2.3rem; font-weight:800; color:var(--accent);
+    margin-bottom:6px; letter-spacing:.5px;
+  }
+  .guess-unit{text-align:center; color:var(--muted); font-size:.85rem; margin-bottom:20px;}
+  input[type=range]{
+    width:100%; height:44px; -webkit-appearance:none; appearance:none;
+    background:transparent; margin-bottom:8px;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:8px; border-radius:8px;
+    background:linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none;
+    width:30px; height:30px; border-radius:50%;
+    background:#fff; border:4px solid var(--accent2);
+    margin-top:-11px;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
+  }
+  .range-labels{display:flex; justify-content:space-between; color:var(--muted); font-size:.75rem; margin-bottom:20px;}
+
+  .reveal-wrap{text-align:center; flex:1; display:flex; flex-direction:column; justify-content:center;}
+  .reveal-icon{font-size:3.4rem; margin-bottom:6px;}
+  .reveal-label{color:var(--muted); font-size:.95rem; margin-bottom:10px;}
+  .reveal-number{font-size:2.8rem; font-weight:800; color:var(--accent); margin-bottom:4px; min-height:1.3em;}
+  .reveal-note{color:var(--muted); font-size:.85rem; margin-bottom:18px; min-height:2.6em; line-height:1.4;}
+  .score-chip{
+    display:inline-block; padding:8px 18px; border-radius:30px; font-weight:700; font-size:.95rem;
+    background:rgba(255,255,255,.08); margin-bottom:6px;
+  }
+  .score-chip.great{background:rgba(82,227,154,.18); color:var(--good);}
+  .score-chip.ok{background:rgba(255,209,102,.18); color:var(--accent);}
+  .score-chip.off{background:rgba(255,107,107,.18); color:var(--bad);}
+  .your-guess-line{color:var(--muted); font-size:.85rem;}
+
+  .summary-title{text-align:center; font-size:1.5rem; font-weight:800; margin-bottom:2px;}
+  .summary-badge{text-align:center; font-size:1.05rem; color:var(--accent); margin-bottom:4px; font-weight:700;}
+  .summary-score{text-align:center; color:var(--muted); font-size:.9rem; margin-bottom:18px;}
+
+  .share-card{
+    background:linear-gradient(160deg, #0d1744, #05081c);
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:22px; padding:20px; margin-bottom:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,.5);
+  }
+  .share-card-head{text-align:center; margin-bottom:12px;}
+  .share-card-head .globe{font-size:2rem;}
+  .share-card-head h2{font-size:1.1rem; margin:4px 0 0;}
+  .share-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .share-item{
+    background:rgba(255,255,255,.05); border-radius:14px; padding:10px 8px; text-align:center;
+  }
+  .share-item .ic{font-size:1.5rem;}
+  .share-item .val{font-weight:800; font-size:1rem; margin-top:2px;}
+  .share-item .lb{color:var(--muted); font-size:.7rem; margin-top:1px;}
+  .share-footer{text-align:center; margin-top:12px; color:var(--muted); font-size:.75rem;}
+
+  canvas#cardCanvas{display:none;}
+  .hint{text-align:center; color:var(--muted); font-size:.78rem; margin-top:6px;}
+
+  a.link-reset{color:var(--accent2); text-decoration:none; font-size:.85rem;}
+  footer.tiny{text-align:center; color:#555c7e; font-size:.7rem; margin-top:18px;}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<canvas id="cardCanvas" width="1080" height="1120"></canvas>
+
+<div class="wrap">
+
+  <!-- INTRO -->
+  <section class="screen active" id="screen-intro">
+    <div class="earth-emoji">🌍</div>
+    <h1>Your Share of Earth</h1>
+    <p class="sub">If every acre, tree, bird, gram of gold and star of the galaxy were split evenly among all 8 billion of us — what would <b>you</b> personally get?</p>
+    <p class="sub">Guess each one before the reveal. Closer guesses score higher. Let's see how well you know your own planet.</p>
+    <button class="btn" id="startBtn">Start guessing →</button>
+  </section>
+
+  <!-- QUESTION TEMPLATE (shown/hidden per round) -->
+  <section class="screen" id="screen-question">
+    <div class="progress" id="progressBar"></div>
+    <div class="q-icon" id="qIcon"></div>
+    <div class="q-title" id="qTitle"></div>
+    <p class="q-fact" id="qFact"></p>
+
+    <div class="guess-value" id="guessValue"></div>
+    <div class="guess-unit" id="guessUnit"></div>
+    <input type="range" id="guessSlider">
+    <div class="range-labels"><span id="rangeMin"></span><span id="rangeMax"></span></div>
+
+    <button class="btn" id="lockBtn">Lock in my guess</button>
+  </section>
+
+  <!-- REVEAL TEMPLATE -->
+  <section class="screen" id="screen-reveal">
+    <div class="reveal-wrap">
+      <div class="reveal-icon" id="rIcon"></div>
+      <div class="reveal-label">Your actual share is</div>
+      <div class="reveal-number" id="rNumber">0</div>
+      <div class="reveal-note" id="rNote"></div>
+      <div class="score-chip" id="scoreChip"></div>
+      <div class="your-guess-line" id="yourGuessLine"></div>
+    </div>
+    <button class="btn" id="nextBtn">Next →</button>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="screen" id="screen-summary">
+    <div class="summary-title">Your Earth Share Score</div>
+    <div class="summary-badge" id="finalBadge"></div>
+    <div class="summary-score" id="finalScoreText"></div>
+
+    <div class="share-card" id="shareCard">
+      <div class="share-card-head">
+        <div class="globe">🌍</div>
+        <h2>My Share of Earth</h2>
+      </div>
+      <div class="share-grid" id="shareGrid"></div>
+      <div class="share-footer">Based on Earth split evenly among 8,000,000,000 people · play it yourself</div>
+    </div>
+
+    <button class="btn" id="shareBtn">📤 Share my Earth Share</button>
+    <button class="btn secondary" id="againBtn">Play again</button>
+    <div class="hint" id="shareHint"></div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- starfield background ----------
+  var starsCanvas = document.getElementById('stars');
+  var sctx = starsCanvas.getContext('2d');
+  function sizeStars(){
+    starsCanvas.width = window.innerWidth;
+    starsCanvas.height = window.innerHeight;
+  }
+  sizeStars();
+  window.addEventListener('resize', sizeStars);
+  var starField = [];
+  for (var i=0;i<120;i++){
+    starField.push({
+      x: Math.random()*window.innerWidth,
+      y: Math.random()*window.innerHeight,
+      r: Math.random()*1.4+0.2,
+      tw: Math.random()*Math.PI*2,
+      sp: Math.random()*0.02+0.005
+    });
+  }
+  function drawStars(){
+    sctx.clearRect(0,0,starsCanvas.width, starsCanvas.height);
+    for (var i=0;i<starField.length;i++){
+      var s = starField[i];
+      s.tw += s.sp;
+      var alpha = 0.35 + 0.55*Math.abs(Math.sin(s.tw));
+      sctx.beginPath();
+      sctx.fillStyle = 'rgba(255,255,255,'+alpha.toFixed(2)+')';
+      sctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      sctx.fill();
+    }
+    requestAnimationFrame(drawStars);
+  }
+  drawStars();
+
+  // ---------- game data ----------
+  var CATEGORIES = [
+    {
+      key:'land', icon:'🏞️', title:'Your share of land',
+      fact:'Every acre of Earth’s land, split 8 billion ways.',
+      actual:4.5, unit:'acres', decimals:1,
+      min:0, max:20, step:0.5,
+      note:'That’s about 3.5 football fields — all yours, on paper.'
+    },
+    {
+      key:'trees', icon:'🌳', title:'Your share of trees',
+      fact:'There are roughly 3 trillion trees on Earth.',
+      actual:370, unit:'trees', decimals:0,
+      min:0, max:1000, step:5,
+      note:'A personal forest of 370 trees, somewhere out there.'
+    },
+    {
+      key:'birds', icon:'🐦', title:'Your share of wild birds',
+      fact:'Billions of wild birds roam the skies.',
+      actual:6, unit:'wild birds', decimals:0,
+      min:0, max:50, step:1,
+      note:'Six birds you’ll never meet, that are technically yours.'
+    },
+    {
+      key:'chickens', icon:'🐔', title:'Your share of chickens',
+      fact:'There are more chickens on Earth than any other bird.',
+      actual:3, unit:'chickens', decimals:0,
+      min:0, max:30, step:1,
+      note:'Three chickens. Maybe name them.'
+    },
+    {
+      key:'gold', icon:'💍', title:'Your share of gold',
+      fact:'All the gold ever mined, split evenly.',
+      actual:27, unit:'grams of gold', decimals:0,
+      min:0, max:200, step:1,
+      note:'About 27 grams — roughly 5 gold rings worth.'
+    },
+    {
+      key:'ants', icon:'🐜', title:'Your share of ants',
+      fact:'There are an estimated 20 quadrillion ants on Earth.',
+      actual:2500000, unit:'ants', decimals:0,
+      min:0, max:10000000, step:50000,
+      note:'2.5 million ants. You will never find them.'
+    },
+    {
+      key:'stars', icon:'✨', title:'Your share of the Milky Way',
+      fact:'Our galaxy holds 100–400 billion stars.',
+      actual:12, unit:'stars', decimals:0,
+      min:0, max:100, step:1,
+      note:'Twelve stars of the Milky Way, just for you.'
+    }
+  ];
+
+  var state = {
+    idx: 0,
+    guesses: [],
+    scores: []
+  };
+
+  // ---------- screen handling ----------
+  var screens = {
+    intro: document.getElementById('screen-intro'),
+    question: document.getElementById('screen-question'),
+    reveal: document.getElementById('screen-reveal'),
+    summary: document.getElementById('screen-summary')
+  };
+  function showScreen(name){
+    Object.keys(screens).forEach(function(k){
+      screens[k].classList.toggle('active', k===name);
+    });
+    window.scrollTo(0,0);
+  }
+
+  function fmt(n, decimals){
+    decimals = decimals || 0;
+    var fixed = Number(n).toFixed(decimals);
+    var parts = fixed.split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return parts.join('.');
+  }
+
+  // ---------- progress bar ----------
+  function renderProgress(){
+    var bar = document.getElementById('progressBar');
+    bar.innerHTML = '';
+    for (var i=0;i<CATEGORIES.length;i++){
+      var seg = document.createElement('i');
+      if (i < state.idx) seg.className = 'done';
+      else if (i === state.idx) seg.className = 'now';
+      bar.appendChild(seg);
+    }
+  }
+
+  // ---------- question screen ----------
+  var guessSlider = document.getElementById('guessSlider');
+  var guessValueEl = document.getElementById('guessValue');
+
+  function renderQuestion(){
+    var cat = CATEGORIES[state.idx];
+    renderProgress();
+    document.getElementById('qIcon').textContent = cat.icon;
+    document.getElementById('qTitle').textContent = cat.title;
+    document.getElementById('qFact').textContent = cat.fact;
+    document.getElementById('guessUnit').textContent = cat.unit;
+    document.getElementById('rangeMin').textContent = fmt(cat.min, 0);
+    document.getElementById('rangeMax').textContent = fmt(cat.max, 0) + '+';
+
+    guessSlider.min = cat.min;
+    guessSlider.max = cat.max;
+    guessSlider.step = cat.step;
+    guessSlider.value = Math.round((cat.min+cat.max)/2);
+    guessValueEl.textContent = fmt(guessSlider.value, cat.decimals);
+
+    showScreen('question');
+  }
+
+  guessSlider.addEventListener('input', function(){
+    var cat = CATEGORIES[state.idx];
+    guessValueEl.textContent = fmt(guessSlider.value, cat.decimals);
+  });
+
+  document.getElementById('lockBtn').addEventListener('click', function(){
+    var cat = CATEGORIES[state.idx];
+    var guess = parseFloat(guessSlider.value);
+    state.guesses[state.idx] = guess;
+    var score = scoreGuess(guess, cat.actual);
+    state.scores[state.idx] = score;
+    renderReveal(cat, guess, score);
+  });
+
+  // ---------- scoring ----------
+  function scoreGuess(guess, actual){
+    if (actual === 0) return guess === 0 ? 100 : 0;
+    var err = Math.abs(guess - actual) / actual;
+    var s = Math.round(100 * (1 - err));
+    if (s < 0) s = 0;
+    if (s > 100) s = 100;
+    return s;
+  }
+
+  // ---------- reveal screen ----------
+  var animFrame = null;
+  function renderReveal(cat, guess, score){
+    document.getElementById('rIcon').textContent = cat.icon;
+    document.getElementById('rNote').textContent = cat.note;
+    document.getElementById('yourGuessLine').textContent =
+      'You guessed ' + fmt(guess, cat.decimals) + ' ' + cat.unit + '.';
+
+    var chip = document.getElementById('scoreChip');
+    chip.className = 'score-chip ' + (score >= 70 ? 'great' : score >= 35 ? 'ok' : 'off');
+    chip.textContent = score >= 70 ? ('🎯 Spot on! +' + score)
+                      : score >= 35 ? ('Close-ish, +' + score)
+                      : ('Way off, +' + score);
+
+    showScreen('reveal');
+
+    // animate count-up
+    var numEl = document.getElementById('rNumber');
+    var start = null;
+    var duration = 900;
+    var target = cat.actual;
+    if (animFrame) cancelAnimationFrame(animFrame);
+    function step(ts){
+      if (!start) start = ts;
+      var p = Math.min(1, (ts-start)/duration);
+      var eased = 1 - Math.pow(1-p, 3);
+      var val = target * eased;
+      numEl.textContent = fmt(val, cat.decimals);
+      if (p < 1) animFrame = requestAnimationFrame(step);
+      else numEl.textContent = fmt(target, cat.decimals);
+    }
+    animFrame = requestAnimationFrame(step);
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', function(){
+    state.idx++;
+    if (state.idx >= CATEGORIES.length){
+      renderSummary();
+    } else {
+      renderQuestion();
+    }
+  });
+
+  // ---------- summary ----------
+  function totalScore(){
+    return state.scores.reduce(function(a,b){ return a+(b||0); }, 0);
+  }
+  function maxScore(){ return CATEGORIES.length * 100; }
+
+  function badgeFor(pct){
+    if (pct >= 85) return '🌍✨ Earth Whisperer';
+    if (pct >= 65) return '🔭 Pretty Sharp Guesser';
+    if (pct >= 45) return '🧭 Fair Share Finder';
+    if (pct >= 20) return '🤪 Wildly Optimistic Guesser';
+    return '👽 Majorly Lost in Space';
+  }
+
+  function renderSummary(){
+    var total = totalScore();
+    var pct = Math.round(100 * total / maxScore());
+    document.getElementById('finalBadge').textContent = badgeFor(pct);
+    document.getElementById('finalScoreText').textContent =
+      'Score: ' + total + ' / ' + maxScore() + ' (' + pct + '% planetary accuracy)';
+
+    var grid = document.getElementById('shareGrid');
+    grid.innerHTML = '';
+    CATEGORIES.forEach(function(cat){
+      var item = document.createElement('div');
+      item.className = 'share-item';
+      item.innerHTML =
+        '<div class="ic">'+cat.icon+'</div>' +
+        '<div class="val">'+fmt(cat.actual, cat.decimals)+'</div>' +
+        '<div class="lb">'+cat.unit+'</div>';
+      grid.appendChild(item);
+    });
+
+    showScreen('summary');
+  }
+
+  // ---------- share image ----------
+  function drawShareCard(){
+    var canvas = document.getElementById('cardCanvas');
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+
+    var grad = ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0, '#141f52');
+    grad.addColorStop(1, '#030512');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,W,H);
+
+    // stars
+    ctx.save();
+    for (var i=0;i<140;i++){
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,'+(0.2+Math.random()*0.6).toFixed(2)+')';
+      var r = Math.random()*2+0.4;
+      ctx.arc(Math.random()*W, Math.random()*H*0.9, r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '72px -apple-system, Helvetica, Arial, sans-serif';
+    ctx.fillText('🌍', W/2, 150);
+
+    ctx.font = '700 44px -apple-system, Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#eef2ff';
+    ctx.fillText('My Share of Earth', W/2, 215);
+
+    var total = totalScore(), pct = Math.round(100*total/maxScore());
+    ctx.font = '700 34px -apple-system, Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#ffd166';
+    ctx.fillText(badgeFor(pct), W/2, 265);
+    ctx.font = '26px -apple-system, Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#9aa5c9';
+    ctx.fillText('Score: ' + total + ' / ' + maxScore() + ' (' + pct + '%)', W/2, 305);
+
+    // grid: 2 columns x 4 rows (7 items)
+    var cols = 2, gap = 24, margin = 60;
+    var cardW = (W - margin*2 - gap)/cols;
+    var cardH = 150;
+    var startY = 360;
+
+    CATEGORIES.forEach(function(cat, i){
+      var col = i % cols, row = Math.floor(i/cols);
+      var x = margin + col*(cardW+gap);
+      var y = startY + row*(cardH+18);
+
+      ctx.fillStyle = 'rgba(255,255,255,0.06)';
+      roundRect(ctx, x, y, cardW, cardH, 20);
+      ctx.fill();
+
+      ctx.textAlign = 'center';
+      ctx.font = '48px -apple-system, Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(cat.icon, x+cardW/2, y+58);
+
+      ctx.font = '700 36px -apple-system, Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(fmt(cat.actual, cat.decimals), x+cardW/2, y+104);
+
+      ctx.font = '22px -apple-system, Helvetica, Arial, sans-serif';
+      ctx.fillStyle = '#9aa5c9';
+      ctx.fillText(cat.unit, x+cardW/2, y+132);
+    });
+
+    ctx.font = '22px -apple-system, Helvetica, Arial, sans-serif';
+    ctx.fillStyle = '#6b7399';
+    ctx.textAlign = 'center';
+    ctx.fillText('Earth, split evenly among 8,000,000,000 people — play it yourself', W/2, H-40);
+
+    return canvas;
+  }
+
+  function roundRect(ctx, x, y, w, h, r){
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+  }
+
+  document.getElementById('shareBtn').addEventListener('click', function(){
+    var canvas = drawShareCard();
+    var hint = document.getElementById('shareHint');
+    canvas.toBlob(function(blob){
+      var file = new File([blob], 'my-earth-share.png', {type:'image/png'});
+      if (navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({
+          files:[file],
+          title:'My Share of Earth',
+          text:'I just found out my personal share of Earth. Play it yourself:'
+        }).catch(function(){ /* user cancelled, ignore */ });
+      } else {
+        var url = canvas.toDataURL('image/png');
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'my-earth-share.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        hint.textContent = 'Image saved — share it from your photos.';
+      }
+    }, 'image/png');
+  });
+
+  document.getElementById('againBtn').addEventListener('click', function(){
+    state = { idx:0, guesses:[], scores:[] };
+    renderQuestion();
+  });
+
+  document.getElementById('startBtn').addEventListener('click', function(){
+    state = { idx:0, guesses:[], scores:[] };
+    renderQuestion();
+  });
+
+})();
+</script>
+</body>
+</html>
